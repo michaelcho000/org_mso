@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OrgSync - 조직도 관리자</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom scrollbar for better aesthetics */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      /* 
+         Org Chart CSS Tree 
+         Uses standard ul/li structure with pseudo-elements for perfect connectors 
+      */
+      .org-tree ul {
+        padding-top: 20px; 
+        position: relative;
+        display: flex;
+        justify-content: center;
+      }
+      
+      .org-tree li {
+        float: left; text-align: center;
+        list-style-type: none;
+        position: relative;
+        padding: 20px 10px 0 10px; /* Spacing between siblings */
+      }
+
+      /* Vertical lines connecting to children */
+      .org-tree li::before, .org-tree li::after {
+        content: '';
+        position: absolute; top: 0; right: 50%;
+        border-top: 2px solid #cbd5e1; /* slate-300 */
+        width: 50%; height: 20px;
+      }
+      
+      .org-tree li::after {
+        right: auto; left: 50%;
+        border-left: 2px solid #cbd5e1;
+      }
+
+      /* Remove connectors from the only child */
+      .org-tree li:only-child::after, .org-tree li:only-child::before {
+        display: none;
+      }
+      
+      .org-tree li:only-child { 
+        padding-top: 0;
+      }
+
+      /* Remove left connector from first child and right connector from last child */
+      .org-tree li:first-child::before, .org-tree li:last-child::after {
+        border: 0 none;
+      }
+      
+      /* Adding back the vertical line to the last nodes */
+      .org-tree li:last-child::before{
+        border-right: 2px solid #cbd5e1;
+        border-radius: 0 5px 0 0;
+      }
+      
+      .org-tree li:first-child::after{
+        border-radius: 5px 0 0 0;
+      }
+
+      /* The vertical line down from the parent to the children group */
+      .org-tree ul ul::before {
+        content: '';
+        position: absolute; top: 0; left: 50%;
+        border-left: 2px solid #cbd5e1;
+        width: 0; height: 20px;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom": "https://esm.sh/react-dom@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-gray-50 text-slate-900 antialiased overflow-hidden">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

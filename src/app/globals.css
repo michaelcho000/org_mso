@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* React Flow 스타일 오버라이드 (deprecated - 제거 예정) */
+.react-flow__node {
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+}
+
+.react-flow__handle {
+  width: 8px;
+  height: 8px;
+  background: hsl(var(--primary));
+  border: 2px solid white;
+}
+
+/* ============================================
+   CSS 기반 조직도 트리 스타일
+   orgsync 패턴 적용
+   ============================================ */
+
+.org-tree ul {
+  padding-top: 20px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.org-tree li {
+  float: left;
+  text-align: center;
+  list-style-type: none;
+  position: relative;
+  padding: 20px 10px 0 10px;
+}
+
+/* 형제 노드 간 수평 연결선 */
+.org-tree li::before,
+.org-tree li::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 50%;
+  border-top: 2px solid hsl(var(--border));
+  width: 50%;
+  height: 20px;
+}
+
+.org-tree li::after {
+  right: auto;
+  left: 50%;
+  border-left: 2px solid hsl(var(--border));
+}
+
+/* 외동 자식은 수평 연결선 제거 */
+.org-tree li:only-child::after,
+.org-tree li:only-child::before {
+  display: none;
+}
+
+.org-tree li:only-child {
+  padding-top: 0;
+}
+
+/* 첫째/막내 자식의 불필요한 연결선 제거 */
+.org-tree li:first-child::before,
+.org-tree li:last-child::after {
+  border: 0 none;
+}
+
+/* 막내 자식의 수직선 유지 + 둥근 모서리 */
+.org-tree li:last-child::before {
+  border-right: 2px solid hsl(var(--border));
+  border-radius: 0 5px 0 0;
+}
+
+/* 첫째 자식의 둥근 모서리 */
+.org-tree li:first-child::after {
+  border-radius: 5px 0 0 0;
+}
+
+/* 부모에서 자식 그룹으로 내려오는 수직선 */
+.org-tree ul ul::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  border-left: 2px solid hsl(var(--border));
+  width: 0;
+  height: 20px;
+}
+
+/* 스크롤바 스타일 */
+.org-tree-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.org-tree-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.org-tree-container::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+
+.org-tree-container::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
