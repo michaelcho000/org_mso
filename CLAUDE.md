@@ -72,7 +72,7 @@ npm run lint     # ESLint 검사
 ```bash
 # GitHub PAT 토큰으로 푸시
 # PAT는 .env.local 파일의 GITHUB_PAT 변수에 저장됨
-git push https://<PAT_TOKEN>@github.com/michaelcho000/org_mso.git main
+git push https://<PAT_TOKEN>@github.com/michaelcho000/org_mso_app.git main
 ```
 
 > **Note**: `.env.local`은 .gitignore에 포함되어 커밋되지 않음
