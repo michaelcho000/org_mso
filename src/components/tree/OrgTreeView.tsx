@@ -208,7 +208,7 @@ export function OrgTreeView({ org }: OrgTreeViewProps) {
     setCollapsedNodeIds(new Set())
   }, [])
 
-  // PNG 내보내기 핸들러
+  // PNG 내보내기 핸들러 (html-to-image 사용)
   const handleExport = useCallback(async () => {
     if (!treeRef.current) return
 
@@ -216,26 +216,39 @@ export function OrgTreeView({ org }: OrgTreeViewProps) {
     const originalZoom = zoom
     setZoom(1)
 
-    // 렌더링 대기
-    await new Promise(resolve => setTimeout(resolve, 200))
+    // 내보내기 모드 클래스 추가 (줄바꿈 방지)
+    treeRef.current.classList.add('export-mode')
+
+    // 트랜지션 완료 대기
+    await new Promise(resolve => setTimeout(resolve, 300))
 
     try {
       // Dynamic import for SSR compatibility
-      const html2canvas = (await import("html2canvas")).default
+      const { toPng } = await import("html-to-image")
 
-      const canvas = await html2canvas(treeRef.current, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        logging: false,
+      // 폰트 로드 완료 대기
+      await document.fonts.ready
+
+      const dataUrl = await toPng(treeRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        style: {
+          transform: 'none',
+          transition: 'none',
+        },
       })
 
       const link = document.createElement("a")
       link.download = `${org === "company" ? "Company" : "Client"}_조직도.png`
-      link.href = canvas.toDataURL("image/png")
+      link.href = dataUrl
       link.click()
     } catch (error) {
       console.error("Export failed:", error)
     }
+
+    // 내보내기 모드 클래스 제거
+    treeRef.current?.classList.remove('export-mode')
 
     // 줌 복원
     setZoom(originalZoom)
