@@ -11,7 +11,7 @@ Company와 Client(Hospital) 조직을 시각적으로 관리하는 Next.js 웹�
 - **State**: Zustand 5 (persist middleware)
 - **Database**: Supabase (PostgreSQL + RLS)
 - **Export**: html-to-image (PNG 내보내기)
-- **Font**: Noto Sans KR (한글), Inter (영문)
+- **Font**: Pretendard (한글/영문 통합)
 
 ## 주요 구조
 
@@ -39,10 +39,16 @@ src/
 ## 환경 변수
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-NEXT_PUBLIC_EDIT_TOKEN=your_edit_token
+# Supabase (Truepath Finance 프로젝트)
+NEXT_PUBLIC_SUPABASE_URL=https://kqcikrxpamvyrbichwfx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
+SUPABASE_ACCESS_TOKEN=<management_api_token>  # CLI/MCP용
+
+# 편집 모드
+NEXT_PUBLIC_EDIT_TOKEN=admin123
 ```
+
+> `.env.local` 파일에 실제 값이 저장됨 (gitignore)
 
 ## 주요 기능
 
@@ -82,7 +88,47 @@ git push https://<PAT_TOKEN>@github.com/michaelcho000/org_mso_app.git main
 - PNG 내보내기 시 `flex-wrap` 요소는 `export-mode` CSS로 강제 `nowrap` 처리
 - Supabase 연결 실패 시 더미 클라이언트로 폴백 (에러 방지)
 
+## Supabase 데이터베이스
+
+### 프로젝트 정보
+
+| 항목 | 값 |
+|------|-----|
+| 프로젝트명 | Truepath Finance |
+| 프로젝트 ID | `kqcikrxpamvyrbichwfx` |
+| 리전 | ap-northeast-2 (서울) |
+| URL | `https://kqcikrxpamvyrbichwfx.supabase.co` |
+
+### nodes 테이블 스키마
+
+| 컬럼 | 타입 | 설명 |
+|------|------|------|
+| id | text | PK |
+| org | text | 'company' 또는 'hospital' |
+| name | text | 이름 |
+| title | text | 직책 |
+| scope | text | 업무범위 (레거시, 하위호환) |
+| tasks | jsonb | 업무 목록 `[{id, content, order}]` |
+| notes | text | 비고 |
+| parent_id | text | 부모 노드 ID |
+| department | text | 소속 부서 |
+| rank | text | 직급 레벨 |
+| position_x | numeric | X 좌표 |
+| position_y | numeric | Y 좌표 |
+| created_at | timestamptz | 생성일 |
+| updated_at | timestamptz | 수정일 |
+
+### SQL 관리 명령어
+
+```bash
+# Supabase Management API로 SQL 실행
+curl -X POST "https://api.supabase.com/v1/projects/kqcikrxpamvyrbichwfx/database/query" \
+  -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "SELECT * FROM nodes LIMIT 5;"}'
+```
+
 ## 배포
 
 - **Vercel**: GitHub 연동 자동 배포
-- **Supabase**: 프로젝트 ID `imjitqtskfzxrgsxeaqv`
+- **Supabase**: 프로젝트 ID `kqcikrxpamvyrbichwfx` (Truepath Finance)

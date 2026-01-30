@@ -14,7 +14,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useUIStore } from "@/stores/uiStore"
 import { useOrgStore } from "@/stores/orgStore"
-import { RankLevel } from "@/lib/types"
+import { RankLevel, TaskItem } from "@/lib/types"
+import { generateId } from "@/lib/utils"
+import { ChevronUp, ChevronDown, Trash2, Plus } from "lucide-react"
 
 // 직급 레벨 옵션
 const rankOptions: { value: RankLevel | ""; label: string }[] = [
@@ -34,7 +36,7 @@ export function NodeDetailSheet() {
   const [title, setTitle] = useState("")
   const [department, setDepartment] = useState("")
   const [rank, setRank] = useState<RankLevel | "">("")
-  const [scope, setScope] = useState("")
+  const [tasks, setTasks] = useState<TaskItem[]>([])
   const [notes, setNotes] = useState("")
 
   const node = nodes.find((n) => n.id === editingNodeId)
@@ -45,20 +47,82 @@ export function NodeDetailSheet() {
       setTitle(node.title || "")
       setDepartment(node.department || "")
       setRank(node.rank || "")
-      setScope(node.scope || "")
+      // tasks가 있으면 사용, 없으면 scope에서 변환
+      if (node.tasks && node.tasks.length > 0) {
+        setTasks([...node.tasks].sort((a, b) => a.order - b.order))
+      } else if (node.scope) {
+        const lines = node.scope.split('\n').filter(line => line.trim())
+        setTasks(lines.map((line, index) => ({
+          id: generateId(),
+          content: line.trim(),
+          order: index
+        })))
+      } else {
+        setTasks([])
+      }
       setNotes(node.notes || "")
     }
   }, [node])
 
+  // 업무 항목 추가
+  const addTask = () => {
+    const newTask: TaskItem = {
+      id: generateId(),
+      content: "",
+      order: tasks.length
+    }
+    setTasks([...tasks, newTask])
+  }
+
+  // 업무 항목 수정
+  const updateTask = (taskId: string, content: string) => {
+    setTasks(tasks.map(t => t.id === taskId ? { ...t, content } : t))
+  }
+
+  // 업무 항목 삭제
+  const removeTask = (taskId: string) => {
+    const filtered = tasks.filter(t => t.id !== taskId)
+    // order 재정렬
+    setTasks(filtered.map((t, index) => ({ ...t, order: index })))
+  }
+
+  // 업무 항목 위로 이동
+  const moveTaskUp = (index: number) => {
+    if (index === 0) return
+    const newTasks = [...tasks]
+    const temp = newTasks[index]
+    newTasks[index] = newTasks[index - 1]
+    newTasks[index - 1] = temp
+    // order 재정렬
+    setTasks(newTasks.map((t, i) => ({ ...t, order: i })))
+  }
+
+  // 업무 항목 아래로 이동
+  const moveTaskDown = (index: number) => {
+    if (index === tasks.length - 1) return
+    const newTasks = [...tasks]
+    const temp = newTasks[index]
+    newTasks[index] = newTasks[index + 1]
+    newTasks[index + 1] = temp
+    // order 재정렬
+    setTasks(newTasks.map((t, i) => ({ ...t, order: i })))
+  }
+
   const handleSave = async () => {
     if (!editingNodeId || !name.trim()) return
+
+    // 빈 업무 항목 필터링
+    const validTasks = tasks.filter(t => t.content.trim())
+    // scope는 하위 호환성을 위해 유지
+    const scopeText = validTasks.map(t => t.content.trim()).join('\n')
 
     await updateNode(editingNodeId, {
       name: name.trim(),
       title: title.trim() || undefined,
       department: department.trim() || undefined,
       rank: rank || undefined,
-      scope: scope.trim() || undefined,
+      tasks: validTasks.length > 0 ? validTasks : undefined,
+      scope: scopeText || undefined,
       notes: notes.trim() || undefined,
     })
 
@@ -71,12 +135,12 @@ export function NodeDetailSheet() {
 
   return (
     <Dialog open={isNodeDetailOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent onClose={handleClose}>
+      <DialogContent className="p-6" onClose={handleClose}>
         <DialogHeader>
           <DialogTitle>노드 편집</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 mt-4">
           <div className="space-y-2">
             <Label htmlFor="name">이름 *</Label>
             <Input
@@ -124,14 +188,60 @@ export function NodeDetailSheet() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="scope">업무 범위</Label>
-            <Textarea
-              id="scope"
-              value={scope}
-              onChange={(e) => setScope(e.target.value)}
-              placeholder="업무 범위를 입력하세요"
-              rows={3}
-            />
+            <Label>업무 범위</Label>
+            <div className="space-y-2">
+              {tasks.map((task, index) => (
+                <div key={task.id} className="flex items-center gap-1">
+                  <div className="flex flex-col">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      onClick={() => moveTaskUp(index)}
+                      disabled={index === 0}
+                    >
+                      <ChevronUp className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5"
+                      onClick={() => moveTaskDown(index)}
+                      disabled={index === tasks.length - 1}
+                    >
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <Input
+                    value={task.content}
+                    onChange={(e) => updateTask(task.id, e.target.value)}
+                    placeholder="업무 내용을 입력하세요"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => removeTask(task.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addTask}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                업무 추가
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2">

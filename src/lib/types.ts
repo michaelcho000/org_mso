@@ -14,12 +14,20 @@ export type EdgeLineStyle = "solid" | "dashed"
 // 가교 역할
 export type BridgeRole = "primary" | "creative" | "executive"
 
+// 업무 항목
+export interface TaskItem {
+  id: string
+  content: string
+  order: number
+}
+
 export interface OrgNode {
   id: string
   org: OrgType
   name: string
   title?: string
-  scope?: string
+  scope?: string           // 기존 (하위 호환성)
+  tasks?: TaskItem[]       // 개별 업무 항목 배열
   notes?: string
   parentId: string | null
   siblingGroupId?: string | null

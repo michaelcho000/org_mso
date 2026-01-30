@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { OrgNode, OrgEdge, Bridge, AppSettings, OrgType } from "@/lib/types"
+import { OrgNode, OrgEdge, Bridge, AppSettings, OrgType, TaskItem } from "@/lib/types"
 import { generateId, formatDate } from "@/lib/utils"
 import { supabase, isSupabaseConfigured } from "@/lib/supabase"
 import { generateAllSeedData } from "@/lib/seedData"
@@ -96,24 +96,45 @@ export const useOrgStore = create<OrgState>((set, get) => ({
       console.log("[OrgStore] Bridges response:", bridgesRes)
       console.log("[OrgStore] Settings response:", settingsRes)
 
+      // scope를 tasks로 마이그레이션하는 헬퍼 함수
+      const migrateScope = (scope: string | undefined): TaskItem[] | undefined => {
+        if (!scope || !scope.trim()) return undefined
+        const lines = scope.split('\n').filter(line => line.trim())
+        return lines.map((line, index) => ({
+          id: generateId(),
+          content: line.trim(),
+          order: index
+        }))
+      }
+
       // snake_case를 camelCase로 변환
-      const nodes: OrgNode[] = (nodesRes.data || []).map((n: Record<string, unknown>) => ({
-        id: n.id as string,
-        org: n.org as OrgType,
-        name: n.name as string,
-        title: n.title as string | undefined,
-        scope: n.scope as string | undefined,
-        notes: n.notes as string | undefined,
-        parentId: n.parent_id as string | null,
-        siblingGroupId: n.sibling_group_id as string | undefined,
-        positionX: n.position_x as number,
-        positionY: n.position_y as number,
-        createdAt: n.created_at as string,
-        updatedAt: n.updated_at as string,
-        // 확장 필드
-        department: n.department as string | undefined,
-        rank: n.rank as OrgNode["rank"],
-      }))
+      const nodes: OrgNode[] = (nodesRes.data || []).map((n: Record<string, unknown>) => {
+        const rawTasks = n.tasks as TaskItem[] | null
+        const scope = n.scope as string | undefined
+        // tasks가 있으면 사용, 없고 scope가 있으면 마이그레이션
+        const tasks = rawTasks && rawTasks.length > 0
+          ? rawTasks
+          : migrateScope(scope)
+
+        return {
+          id: n.id as string,
+          org: n.org as OrgType,
+          name: n.name as string,
+          title: n.title as string | undefined,
+          scope: scope,
+          tasks: tasks,
+          notes: n.notes as string | undefined,
+          parentId: n.parent_id as string | null,
+          siblingGroupId: n.sibling_group_id as string | undefined,
+          positionX: n.position_x as number,
+          positionY: n.position_y as number,
+          createdAt: n.created_at as string,
+          updatedAt: n.updated_at as string,
+          // 확장 필드
+          department: n.department as string | undefined,
+          rank: n.rank as OrgNode["rank"],
+        }
+      })
 
       const edges: OrgEdge[] = (edgesRes.data || []).map((e: Record<string, unknown>) => ({
         id: e.id as string,
@@ -302,6 +323,7 @@ export const useOrgStore = create<OrgState>((set, get) => ({
         if (updates.name !== undefined) dbUpdates.name = updates.name
         if (updates.title !== undefined) dbUpdates.title = updates.title
         if (updates.scope !== undefined) dbUpdates.scope = updates.scope
+        if (updates.tasks !== undefined) dbUpdates.tasks = updates.tasks
         if (updates.notes !== undefined) dbUpdates.notes = updates.notes
         if (updates.parentId !== undefined) dbUpdates.parent_id = updates.parentId
         if (updates.positionX !== undefined) dbUpdates.position_x = updates.positionX
@@ -309,7 +331,11 @@ export const useOrgStore = create<OrgState>((set, get) => ({
         if (updates.department !== undefined) dbUpdates.department = updates.department
         if (updates.rank !== undefined) dbUpdates.rank = updates.rank
 
-        await supabase.from("nodes").update(dbUpdates).eq("id", id)
+        const { error } = await supabase.from("nodes").update(dbUpdates).eq("id", id)
+        if (error) {
+          console.error("[OrgStore] Update error:", error)
+          throw error
+        }
         useToastStore.getState().addToast("저장되었습니다", "success")
       } catch (error) {
         console.error("Failed to update node:", error)

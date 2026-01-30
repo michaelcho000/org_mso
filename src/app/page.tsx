@@ -6,6 +6,7 @@ import { BridgePanel } from "@/components/bridge/BridgePanel"
 import { BridgeOverlay } from "@/components/bridge/BridgeOverlay"
 import { EditKeyDialog } from "@/components/dialogs/EditKeyDialog"
 import { NodeDetailSheet } from "@/components/dialogs/NodeDetailSheet"
+import { NodeViewModal } from "@/components/dialogs/NodeViewModal"
 import { BridgeFormDialog } from "@/components/dialogs/BridgeFormDialog"
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog"
 import { ToastContainer } from "@/components/ui/toast"
@@ -46,6 +47,7 @@ export default function Home() {
       {/* 다이얼로그들 */}
       <EditKeyDialog />
       <NodeDetailSheet />
+      <NodeViewModal />
       <BridgeFormDialog />
       <DeleteConfirmDialog />
       <ToastContainer />

@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --font-sans: var(--font-noto-sans-kr), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -166,4 +166,42 @@
   -webkit-line-clamp: unset !important;
   display: block !important;
   overflow: visible !important;
+}
+
+/* 내보내기 시 업무 목록 전체 표시 */
+.export-mode .tasks-list {
+  max-height: none !important;
+  display: block !important;
+}
+
+/* ============================================
+   카드 내 업무 목록 스타일 (org-tree 스타일 오버라이드)
+   ============================================ */
+[data-card] ul,
+[data-card] li {
+  float: none !important;
+  display: block !important;
+  position: static !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+[data-card] ul {
+  padding-left: 0.5rem !important;
+}
+
+[data-card] ul::before,
+[data-card] li::before,
+[data-card] li::after {
+  display: none !important;
+  content: none !important;
+  border: none !important;
+}
+
+.export-mode [data-tasks-expanded="false"] {
+  display: none !important;
+}
+
+.export-mode [data-tasks-expanded="true"] {
+  display: block !important;
 }

@@ -74,9 +74,24 @@ export function OrgNodeCard({
   onToggleCollapse,
 }: OrgNodeCardProps) {
   const { bridges } = useOrgStore()
-  const { openNodeDetail, openDeleteDialog } = useUIStore()
+  const { openNodeDetail, openDeleteDialog, openNodeView } = useUIStore()
   const { isEditor } = useAuthStore()
   const [isDragOver, setIsDragOver] = useState(false)
+  const [isTasksExpanded, setIsTasksExpanded] = useState(false)
+
+  // tasks 배열 또는 scope에서 업무 목록 가져오기
+  const taskList = node.tasks && node.tasks.length > 0
+    ? [...node.tasks].sort((a, b) => a.order - b.order).map(t => t.content)
+    : node.scope
+      ? node.scope.split('\n').filter(line => line.trim())
+      : []
+
+  // 카드 클릭 핸들러 (비편집자용 상세보기)
+  const handleCardClick = () => {
+    if (!isEditor && taskList.length > 0) {
+      openNodeView(node.id)
+    }
+  }
 
   const isCompany = node.org === "company"
 
@@ -199,7 +214,7 @@ export function OrgNodeCard({
 
         {/* 브릿지 연결 아이콘 (여러 가교 지원) */}
         {linkedBridges.length > 0 && (
-          <div className="mt-1 flex gap-0.5" title={`가교 ${linkedBridges.length}개 연결됨`}>
+          <div className="mt-2 flex gap-0.5" title={`가교 ${linkedBridges.length}개 연결됨`}>
             {linkedBridgeColors.map((color, idx) => (
               <Link key={idx} className={cn("h-4 w-4", color.text)} />
             ))}
@@ -208,15 +223,46 @@ export function OrgNodeCard({
       </div>
 
       {/* 업무 범위 */}
-      {node.scope && (
-        <p
-          className={cn(
-            "text-xs text-muted-foreground mt-2 line-clamp-2 text-left border-l-2 pl-2",
-            isCompany ? "border-slate-300" : "border-emerald-300"
+      {taskList.length > 0 && (
+        <div className="mt-3 text-left w-full">
+          <ul
+            className={cn(
+              "text-xs text-muted-foreground space-y-0.5 border-l-2 pl-2 tasks-list",
+              isCompany ? "border-slate-300" : "border-emerald-300"
+            )}
+            data-tasks-expanded={isTasksExpanded ? "true" : "false"}
+          >
+            {(isTasksExpanded ? taskList : taskList.slice(0, 3)).map((task, idx) => (
+              <li key={idx}>• {task}</li>
+            ))}
+          </ul>
+
+          {/* 더보기/접기 버튼 (4개 이상일 때만) */}
+          {taskList.length > 3 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsTasksExpanded(!isTasksExpanded)
+              }}
+              className={cn(
+                "text-[10px] flex items-center justify-center gap-0.5 mt-1 hover:underline w-full",
+                isCompany ? "text-slate-400" : "text-emerald-500"
+              )}
+            >
+              {isTasksExpanded ? (
+                <>
+                  <ChevronUp className="h-3 w-3" />
+                  접기
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-3 w-3" />
+                  +{taskList.length - 3}개 더보기
+                </>
+              )}
+            </button>
           )}
-        >
-          {node.scope}
-        </p>
+        </div>
       )}
 
       {isEditor && (
@@ -293,9 +339,13 @@ export function OrgNodeCard({
         >
           <Card
             data-card
-            className="w-44 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md rounded-[10px] bg-background"
+            className={cn(
+              "w-56 transition-shadow hover:shadow-md rounded-[10px] bg-background",
+              isEditor ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
+            )}
+            onClick={handleCardClick}
           >
-            <CardContent className="p-3">{cardContent}</CardContent>
+            <CardContent className="px-3 py-3">{cardContent}</CardContent>
           </Card>
         </div>
       ) : (
@@ -303,11 +353,13 @@ export function OrgNodeCard({
         <Card
           data-card
           className={cn(
-            "w-44 cursor-grab active:cursor-grabbing transition-shadow hover:shadow-md",
+            "w-56 transition-shadow hover:shadow-md",
+            isEditor ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
             linkedBridges.length > 0 && `ring-2 ${linkedBridgeColors[0]?.ring}`
           )}
+          onClick={handleCardClick}
         >
-          <CardContent className="p-3">{cardContent}</CardContent>
+          <CardContent className="px-3 py-3">{cardContent}</CardContent>
         </Card>
       )}
 

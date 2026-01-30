@@ -40,6 +40,7 @@ export function OrgTreeView({ org }: OrgTreeViewProps) {
 
   // 줌 상태
   const [zoom, setZoom] = useState(1) // 기본 100% (초기 로드 후 자동 맞춤)
+  const [zoomInputValue, setZoomInputValue] = useState("100") // 줌 입력 필드용
   const [contentSize, setContentSize] = useState({ width: 0, height: 0 })
   const [isInitialFitDone, setIsInitialFitDone] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -77,6 +78,11 @@ export function OrgTreeView({ org }: OrgTreeViewProps) {
   useEffect(() => {
     initialize()
   }, [initialize])
+
+  // zoom 변경 시 입력 필드 동기화
+  useEffect(() => {
+    setZoomInputValue(String(Math.round(zoom * 100)))
+  }, [zoom])
 
   // 트리 크기 측정
   useEffect(() => {
@@ -390,9 +396,32 @@ export function OrgTreeView({ org }: OrgTreeViewProps) {
           >
             <Minus className="h-3 w-3" />
           </Button>
-          <span className="text-xs w-10 text-center font-medium tabular-nums">
-            {Math.round(zoom * 100)}%
-          </span>
+          <input
+            type="text"
+            value={zoomInputValue}
+            onChange={(e) => {
+              // 숫자만 허용
+              const value = e.target.value.replace(/[^0-9]/g, '')
+              setZoomInputValue(value)
+            }}
+            onBlur={() => {
+              const value = parseInt(zoomInputValue, 10)
+              if (isNaN(value) || value < 30) {
+                setZoom(0.3)
+              } else if (value > 150) {
+                setZoom(1.5)
+              } else {
+                setZoom(value / 100)
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur()
+              }
+            }}
+            className="text-xs w-10 text-center font-medium tabular-nums bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary rounded"
+          />
+          <span className="text-xs">%</span>
           <Button
             size="icon"
             variant="ghost"

@@ -1,18 +1,5 @@
 import type { Metadata } from "next"
-import { Inter, Noto_Sans_KR } from "next/font/google"
 import "./globals.css"
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-})
-
-const notoSansKR = Noto_Sans_KR({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-noto-sans-kr",
-  display: "swap",
-})
 
 export const metadata: Metadata = {
   title: "조직도 관리",
@@ -26,7 +13,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className={`${inter.variable} ${notoSansKR.variable} font-sans`}>{children}</body>
+      <head>
+        <link
+          rel="stylesheet"
+          as="style"
+          crossOrigin="anonymous"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+        />
+      </head>
+      <body className="font-sans">{children}</body>
     </html>
   )
 }

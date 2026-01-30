@@ -35,6 +35,11 @@ interface UIState {
   deleteTargetType: "node" | "bridge" | null
   openDeleteDialog: (id: string, type: "node" | "bridge") => void
   closeDeleteDialog: () => void
+
+  // 노드 상세보기 모달 (비편집자용)
+  viewingNodeId: string | null
+  openNodeView: (nodeId: string) => void
+  closeNodeView: () => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -68,4 +73,8 @@ export const useUIStore = create<UIState>((set) => ({
     set({ isDeleteDialogOpen: true, deleteTargetId: id, deleteTargetType: type }),
   closeDeleteDialog: () =>
     set({ isDeleteDialogOpen: false, deleteTargetId: null, deleteTargetType: null }),
+
+  viewingNodeId: null,
+  openNodeView: (nodeId) => set({ viewingNodeId: nodeId }),
+  closeNodeView: () => set({ viewingNodeId: null }),
 }))
